@@ -7,6 +7,8 @@ using System.Net;
 using System.Web;
 using System.Web.Mvc;
 using HW.Models;
+using NPOI.HSSF.UserModel;
+using System.IO;
 
 namespace HW.Controllers
 {
@@ -120,6 +122,54 @@ namespace HW.Controllers
                 return HttpNotFound();
             }
             return View(客戶資料);
+        }
+
+        public ActionResult Export()
+        {
+            var data = db.客戶資料.Where(p => p.是否已刪除 == false).ToList();
+            byte[] _bytes = null;
+            var workbook = new HSSFWorkbook();
+            var sheet = workbook.CreateSheet("Sheet1");
+            var row = sheet.CreateRow(0);
+            row.CreateCell(0).SetCellValue("客戶名稱");
+            row.CreateCell(1).SetCellValue("統一編號");
+            row.CreateCell(2).SetCellValue("電話");
+            row.CreateCell(3).SetCellValue("傳真");
+            row.CreateCell(4).SetCellValue("地址");
+            row.CreateCell(5).SetCellValue("Email");
+            for (int i = 0; i < data.Count; i++)
+            {
+                row = sheet.CreateRow(i + 1);
+                row.CreateCell(0).SetCellValue(data[i].客戶名稱);
+                row.CreateCell(1).SetCellValue(data[i].統一編號);
+                row.CreateCell(2).SetCellValue(data[i].電話);
+                row.CreateCell(3).SetCellValue(data[i].傳真);
+                row.CreateCell(4).SetCellValue(data[i].地址);
+                row.CreateCell(5).SetCellValue(data[i].Email);
+            }
+            using (var stream = new MemoryStream())
+            {
+                workbook.Write(stream);
+                stream.Position = 0;
+                stream.Flush();
+                _bytes = stream.GetBuffer();
+            }
+            return File(_bytes, "application/vnd.ms-excel");
+        }
+
+        [HttpPost]
+        public ActionResult BatchDelete(int[] chkDelete)
+        {
+            foreach (var id in chkDelete)
+            {
+                var q = db.客戶資料.Find(id);
+                q.是否已刪除 = true;
+            }
+            if (db.ChangeTracker.HasChanges() == true)
+            {
+                db.SaveChanges();
+            }
+            return Redirect("Index");
         }
 
         // POST: 客戶資料/Delete/5

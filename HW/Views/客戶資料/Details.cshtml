@@ -64,3 +64,7 @@
     @Html.ActionLink("Edit", "Edit", new { id = Model.Id }) |
     @Html.ActionLink("Back to List", "Index")
 </p>
+<fieldset>
+    <legend>客戶銀行資訊</legend>
+    @Html.Partial("~/Views/客戶銀行資訊/_List.cshtml", Model.客戶銀行資訊.Where(p => p.是否已刪除 == false))
+</fieldset>
